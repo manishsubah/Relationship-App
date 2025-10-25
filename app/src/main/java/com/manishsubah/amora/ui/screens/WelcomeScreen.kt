@@ -23,16 +23,6 @@ import androidx.compose.ui.unit.sp
 import com.manishsubah.amora.R
 import com.manishsubah.amora.ui.theme.AmoraTheme
 
-/**
- * Welcome/Onboarding screen for Amora app.
- * 
- * This screen introduces users to the Amora relationship app with:
- * - Hero image of a couple representing relationships
- * - Welcome message and app description
- * - Get Started button to proceed to authentication
- * 
- * Design follows the provided mockup with curved bottom section and romantic theme.
- */
 @Composable
 fun WelcomeScreen(
     onGetStartedClick: () -> Unit = {}
@@ -45,27 +35,23 @@ fun WelcomeScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Scrollable content area
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Hero image section
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(400.dp) // Fixed height for better control
                 ) {
-                    // Background image
                     Image(
                         painter = painterResource(id = R.drawable.pic),
                         contentDescription = "Couple representing relationships",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                    
-                    // Curved bottom overlay to create the wave effect
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -81,15 +67,13 @@ fun WelcomeScreen(
                             )
                     )
                 }
-                
-                // Content section
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(horizontal = 24.dp, vertical = 32.dp)
                 ) {
-                    // Welcome text content
                     Text(
                         text = "Welcome To",
                         style = MaterialTheme.typography.headlineMedium.copy(
@@ -119,8 +103,7 @@ fun WelcomeScreen(
                         lineHeight = 24.sp,
                         textAlign = TextAlign.Start
                     )
-                    
-                    // Additional content to make it scrollable
+
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Text(
@@ -142,13 +125,11 @@ fun WelcomeScreen(
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )
-                    
-                    // Extra spacing for scrollable content
+
                     Spacer(modifier = Modifier.height(100.dp))
                 }
             }
             
-            // Fixed bottom button (like navigation bar)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.surface,
