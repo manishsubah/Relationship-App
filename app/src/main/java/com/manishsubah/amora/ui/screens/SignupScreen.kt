@@ -1,0 +1,431 @@
+package com.manishsubah.amora.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.manishsubah.amora.ui.theme.AmoraTheme
+import com.manishsubah.amora.ui.viewmodels.SignupViewModel
+
+/**
+ * Signup/Create Account screen for Amora app.
+ * 
+ * This screen allows users to create a new account with:
+ * - Email input field with validation
+ * - Password input field with visibility toggle
+ * - OTP (One-Time Password) input field
+ * - Curved header design matching the provided mockup
+ * 
+ * Follows Material 3 design principles and uses the Amora color scheme.
+ * 
+ * @param onSignupClick Callback when signup button is clicked
+ * @param onLoginClick Callback when user wants to go back to login
+ */
+@Composable
+fun SignupScreen(
+    onSignupClick: (email: String, password: String, otp: String) -> Unit = { _, _, _ -> },
+    onLoginClick: () -> Unit = {},
+    viewModel: SignupViewModel = hiltViewModel()
+) {
+    // Collect ViewModel state
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // State variables for form inputs
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var otpVisible by remember { mutableStateOf(false) }
+
+    // Form validation states
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    var otpError by remember { mutableStateOf("") }
+    
+    // Handle ViewModel state changes
+    LaunchedEffect(uiState.isSignupSuccessful) {
+        if (uiState.isSignupSuccessful) {
+            onSignupClick(email, password, otp)
+            viewModel.resetSignupSuccess()
+        }
+    }
+    
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            // Handle error display
+            viewModel.clearError()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Curved header section
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            ) {
+                // Main curved background
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                ),
+                                radius = 800f
+                            ),
+                            shape = RoundedCornerShape(
+                                bottomStart = 60.dp,
+                                bottomEnd = 60.dp
+                            )
+                        )
+                )
+                
+                // Overlapping curved element
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(120.dp)
+                        .align(Alignment.TopEnd)
+                        .offset(x = 20.dp, y = (-20).dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.secondary,
+                            shape = RoundedCornerShape(60.dp)
+                        )
+                )
+                
+                // Title text
+                Text(
+                    text = "Create Account",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    fontSize = 28.sp,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 24.dp, top = 40.dp)
+                )
+            }
+            
+            // Form content section
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Email field
+                Column {
+                    Text(
+                        text = "Email",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        fontSize = 14.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { 
+                            email = it
+                            emailError = "" // Clear error when user types
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                text = "email@test.com",
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.Black,
+                            unfocusedContainerColor = Color.Black,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedPlaceholderColor = Color.White.copy(alpha = 0.6f),
+                            unfocusedPlaceholderColor = Color.White.copy(alpha = 0.6f)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
+                        isError = emailError.isNotEmpty(),
+                        singleLine = true
+                    )
+                    
+                    if (emailError.isNotEmpty()) {
+                        Text(
+                            text = emailError,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+                
+                // Password field
+                Column {
+                    Text(
+                        text = "Password",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        fontSize = 14.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { 
+                            password = it
+                            passwordError = "" // Clear error when user types
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                text = "Enter your password",
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.Black,
+                            unfocusedContainerColor = Color.Black,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedPlaceholderColor = Color.White.copy(alpha = 0.6f),
+                            unfocusedPlaceholderColor = Color.White.copy(alpha = 0.6f)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Text(
+                                    text = if (passwordVisible) "Hide" else "Show",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        },
+                        isError = passwordError.isNotEmpty(),
+                        singleLine = true
+                    )
+                    
+                    if (passwordError.isNotEmpty()) {
+                        Text(
+                            text = passwordError,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+                
+                // OTP field
+                Column {
+                    Text(
+                        text = "OTP",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        fontSize = 14.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = otp,
+                        onValueChange = { 
+                            otp = it
+                            otpError = "" // Clear error when user types
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                text = "Enter OTP",
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.Black,
+                            unfocusedContainerColor = Color.Black,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedPlaceholderColor = Color.White.copy(alpha = 0.6f),
+                            unfocusedPlaceholderColor = Color.White.copy(alpha = 0.6f)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        visualTransformation = if (otpVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { otpVisible = !otpVisible }) {
+                                Text(
+                                    text = if (otpVisible) "Hide" else "Show",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        },
+                        isError = otpError.isNotEmpty(),
+                        singleLine = true
+                    )
+                    
+                    if (otpError.isNotEmpty()) {
+                        Text(
+                            text = otpError,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Signup button
+                Button(
+                    onClick = {
+                        // Basic validation
+                        var hasError = false
+                        
+                        if (email.isBlank()) {
+                            emailError = "Email is required"
+                            hasError = true
+                        } else if (!isValidEmail(email)) {
+                            emailError = "Please enter a valid email"
+                            hasError = true
+                        }
+                        
+                        if (password.isBlank()) {
+                            passwordError = "Password is required"
+                            hasError = true
+                        } else if (password.length < 6) {
+                            passwordError = "Password must be at least 6 characters"
+                            hasError = true
+                        }
+                        
+                        if (otp.isBlank()) {
+                            otpError = "OTP is required"
+                            hasError = true
+                        } else if (otp.length != 6) {
+                            otpError = "OTP must be 6 digits"
+                            hasError = true
+                        }
+                        
+                        if (!hasError) {
+                            viewModel.signup(email, password, otp)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(28.dp),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 4.dp
+                    ),
+                    enabled = !uiState.isLoading
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Create Account",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+                
+                // Login link
+                TextButton(
+                    onClick = onLoginClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Already have an account? Login",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Validates email format using a simple regex pattern.
+ * 
+ * @param email Email string to validate
+ * @return true if email format is valid, false otherwise
+ */
+private fun isValidEmail(email: String): Boolean {
+    val emailRegex = "^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$".toRegex()
+    return emailRegex.matches(email)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignupScreenPreview() {
+    AmoraTheme {
+        SignupScreen()
+    }
+}

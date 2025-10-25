@@ -4,21 +4,43 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.manishsubah.amora.ui.screens.SignupScreen
 import com.manishsubah.amora.ui.screens.WelcomeScreen
 import com.manishsubah.amora.ui.theme.AmoraTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AmoraTheme {
-                WelcomeScreen(
-                    onGetStartedClick = {
-                        // TODO: Navigate to authentication screens
-                        // For now, this is a placeholder
-                    }
-                )
+                var currentScreen by remember { mutableStateOf("welcome") }
+                
+                when (currentScreen) {
+                    "welcome" -> WelcomeScreen(
+                        onGetStartedClick = {
+                            currentScreen = "signup"
+                        }
+                    )
+                    "signup" -> SignupScreen(
+                        onSignupClick = { email, password, otp ->
+                            // Handle signup logic here
+                            // For now, just show a simple success message
+                            currentScreen = "welcome" // Go back to welcome for demo
+                        },
+                        onLoginClick = {
+                            // Navigate to login screen
+                            // For now, go back to welcome
+                            currentScreen = "welcome"
+                        }
+                    )
+                }
             }
         }
     }

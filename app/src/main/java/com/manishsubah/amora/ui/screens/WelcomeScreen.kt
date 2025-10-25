@@ -129,7 +129,7 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(100.dp))
                 }
             }
-            
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.surface,
