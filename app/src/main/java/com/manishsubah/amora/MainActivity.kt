@@ -30,9 +30,7 @@ class MainActivity : ComponentActivity() {
                     )
                     "signup" -> SignupScreen(
                         onSignupClick = { email, password, otp ->
-                            // Handle signup logic here
-                            // For now, just show a simple success message
-                            currentScreen = "welcome" // Go back to welcome for demo
+                            currentScreen = "welcome"
                         },
                         onLoginClick = {
                             // Navigate to login screen

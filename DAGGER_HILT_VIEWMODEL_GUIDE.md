@@ -13,7 +13,8 @@
 
 ## 🎯 What is Dagger Hilt?
 
-**Dagger Hilt** is a dependency injection framework for Android that simplifies the process of providing dependencies to your classes. It's built on top of Dagger 2 and provides a more Android-friendly API.
+**Dagger Hilt** is a dependency injection framework for Android that simplifies the process of providing dependencies to your classes. 
+It's built on top of Dagger 2 and provides a more Android-friendly API.
 
 ### Key Concepts:
 
@@ -37,7 +38,8 @@
 
 ## 🧠 What is ViewModel?
 
-**ViewModel** is an Android Architecture Component that manages UI-related data in a lifecycle-conscious way. It survives configuration changes and provides data to the UI.
+**ViewModel** is an Android Architecture Component that manages UI-related data in a lifecycle-conscious way. 
+It survives configuration changes and provides data to the UI.
 
 ### Key Concepts:
 

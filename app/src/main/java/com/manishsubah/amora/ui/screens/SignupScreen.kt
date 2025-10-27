@@ -24,42 +24,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.manishsubah.amora.ui.theme.AmoraTheme
 import com.manishsubah.amora.ui.viewmodels.SignupViewModel
 
-/**
- * Signup/Create Account screen for Amora app.
- * 
- * This screen allows users to create a new account with:
- * - Email input field with validation
- * - Password input field with visibility toggle
- * - OTP (One-Time Password) input field
- * - Curved header design matching the provided mockup
- * 
- * Follows Material 3 design principles and uses the Amora color scheme.
- * 
- * @param onSignupClick Callback when signup button is clicked
- * @param onLoginClick Callback when user wants to go back to login
- */
 @Composable
 fun SignupScreen(
     onSignupClick: (email: String, password: String, otp: String) -> Unit = { _, _, _ -> },
     onLoginClick: () -> Unit = {},
     viewModel: SignupViewModel = hiltViewModel()
 ) {
-    // Collect ViewModel state
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    // State variables for form inputs
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var otpVisible by remember { mutableStateOf(false) }
 
-    // Form validation states
     var emailError by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf("") }
     var otpError by remember { mutableStateOf("") }
-    
-    // Handle ViewModel state changes
+
     LaunchedEffect(uiState.isSignupSuccessful) {
         if (uiState.isSignupSuccessful) {
             onSignupClick(email, password, otp)
@@ -69,7 +51,6 @@ fun SignupScreen(
     
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
-            // Handle error display
             viewModel.clearError()
         }
     }
@@ -82,13 +63,11 @@ fun SignupScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Curved header section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
             ) {
-                // Main curved background
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -107,8 +86,7 @@ fun SignupScreen(
                             )
                         )
                 )
-                
-                // Overlapping curved element
+
                 Box(
                     modifier = Modifier
                         .width(120.dp)
@@ -120,8 +98,7 @@ fun SignupScreen(
                             shape = RoundedCornerShape(60.dp)
                         )
                 )
-                
-                // Title text
+
                 Text(
                     text = "Create Account",
                     style = MaterialTheme.typography.headlineLarge.copy(
@@ -134,8 +111,7 @@ fun SignupScreen(
                         .padding(start = 24.dp, top = 40.dp)
                 )
             }
-            
-            // Form content section
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -143,7 +119,6 @@ fun SignupScreen(
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Email field
                 Column {
                     Text(
                         text = "Email",
@@ -160,7 +135,7 @@ fun SignupScreen(
                         value = email,
                         onValueChange = { 
                             email = it
-                            emailError = "" // Clear error when user types
+                            emailError = ""
                         },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
@@ -197,8 +172,7 @@ fun SignupScreen(
                         )
                     }
                 }
-                
-                // Password field
+
                 Column {
                     Text(
                         text = "Password",
@@ -215,7 +189,7 @@ fun SignupScreen(
                         value = password,
                         onValueChange = { 
                             password = it
-                            passwordError = "" // Clear error when user types
+                            passwordError = ""
                         },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
@@ -262,8 +236,7 @@ fun SignupScreen(
                         )
                     }
                 }
-                
-                // OTP field
+
                 Column {
                     Text(
                         text = "OTP",
@@ -280,7 +253,7 @@ fun SignupScreen(
                         value = otp,
                         onValueChange = { 
                             otp = it
-                            otpError = "" // Clear error when user types
+                            otpError = ""
                         },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
@@ -329,11 +302,9 @@ fun SignupScreen(
                 }
                 
                 Spacer(modifier = Modifier.weight(1f))
-                
-                // Signup button
+
                 Button(
                     onClick = {
-                        // Basic validation
                         var hasError = false
                         
                         if (email.isBlank()) {
@@ -392,8 +363,7 @@ fun SignupScreen(
                         )
                     }
                 }
-                
-                // Login link
+
                 TextButton(
                     onClick = onLoginClick,
                     modifier = Modifier.fillMaxWidth()
@@ -411,12 +381,6 @@ fun SignupScreen(
     }
 }
 
-/**
- * Validates email format using a simple regex pattern.
- * 
- * @param email Email string to validate
- * @return true if email format is valid, false otherwise
- */
 private fun isValidEmail(email: String): Boolean {
     val emailRegex = "^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$".toRegex()
     return emailRegex.matches(email)
