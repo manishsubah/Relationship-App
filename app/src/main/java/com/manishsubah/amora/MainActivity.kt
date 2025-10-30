@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.manishsubah.amora.ui.screens.LoginScreen
 import com.manishsubah.amora.ui.screens.SignupScreen
 import com.manishsubah.amora.ui.screens.WelcomeScreen
 import com.manishsubah.amora.ui.theme.AmoraTheme
@@ -29,13 +30,21 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                     "signup" -> SignupScreen(
-                        onSignupClick = { email, password, otp ->
-                            currentScreen = "welcome"
+                        onSignupClick = { _, _, _ ->
+                            // After successful signup, navigate to login
+                            currentScreen = "login"
                         },
                         onLoginClick = {
-                            // Navigate to login screen
-                            // For now, go back to welcome
+                            currentScreen = "login"
+                        }
+                    )
+                    "login" -> LoginScreen(
+                        onLoginSuccess = {
+                            // After login, go to welcome (or home when available)
                             currentScreen = "welcome"
+                        },
+                        onSignupClick = {
+                            currentScreen = "signup"
                         }
                     )
                 }
