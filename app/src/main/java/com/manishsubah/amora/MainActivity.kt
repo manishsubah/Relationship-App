@@ -31,7 +31,6 @@ class MainActivity : ComponentActivity() {
                     )
                     "signup" -> SignupScreen(
                         onSignupClick = { _, _, _ ->
-                            // After successful signup, navigate to login
                             currentScreen = "login"
                         },
                         onLoginClick = {
@@ -40,7 +39,6 @@ class MainActivity : ComponentActivity() {
                     )
                     "login" -> LoginScreen(
                         onLoginSuccess = {
-                            // After login, go to welcome (or home when available)
                             currentScreen = "welcome"
                         },
                         onSignupClick = {

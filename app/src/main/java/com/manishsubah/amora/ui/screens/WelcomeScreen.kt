@@ -43,7 +43,7 @@ fun WelcomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(400.dp) // Fixed height for better control
+                        .height(400.dp)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.pic),
