@@ -45,7 +45,6 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
-            // Clear after observing to avoid repeated toasts/snacks by callers
             viewModel.clearError()
         }
     }
@@ -58,7 +57,6 @@ fun LoginScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +94,6 @@ fun LoginScreen(
                 )
             }
 
-            // Form
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -104,7 +101,6 @@ fun LoginScreen(
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Email
                 Column {
                     Text(
                         text = "Email",
@@ -153,8 +149,7 @@ fun LoginScreen(
                         )
                     }
                 }
-
-                // Password
+                
                 Column {
                     Text(
                         text = "Password",
