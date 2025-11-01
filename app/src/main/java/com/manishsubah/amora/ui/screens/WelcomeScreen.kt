@@ -95,7 +95,8 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "Find meaningful connections and build lasting relationships with people who share your values and interests.",
+                        text = "Find meaningful connections and build lasting relationships with people " +
+                                "who share your values and interests.",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         ),
@@ -118,7 +119,8 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     Text(
-                        text = "• Connect with like-minded individuals\n• Build meaningful relationships\n• Share your interests and values\n• Find your perfect match",
+                        text = "• Connect with like-minded individuals\n• Build meaningful relationships\n• " +
+                                "Share your interests and values\n• Find your perfect match",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         ),
