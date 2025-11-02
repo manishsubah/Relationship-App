@@ -51,7 +51,23 @@ fun SignupScreen(
     
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
+            // Display error - you can add Snackbar here if needed
+            // For now, we'll show it in the emailError field if it's OTP related
+            val errorMsg = uiState.error
+            if (errorMsg?.contains("OTP", ignoreCase = true) == true ||
+                errorMsg?.contains("email", ignoreCase = true) == true
+            ) {
+                emailError = errorMsg
+            }
             viewModel.clearError()
+        }
+    }
+    
+    // Show success message when OTP is sent
+    LaunchedEffect(uiState.isOtpSent) {
+        if (uiState.isOtpSent) {
+            // OTP sent successfully - message is displayed in UI
+            // In test mode, OTP is also logged to Logcat
         }
     }
 
@@ -171,6 +187,82 @@ fun SignupScreen(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
+                    
+                    // Send OTP Button
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    if (!uiState.isOtpSent) {
+                        // Send OTP button (first time)
+                        Button(
+                            onClick = {
+                                if (email.isBlank()) {
+                                    emailError = "Email is required"
+                                } else if (!isValidEmail(email)) {
+                                    emailError = "Please enter a valid email"
+                                } else {
+                                    viewModel.sendOtp(email)
+                                }
+                            },
+                            enabled = !uiState.isSendingOtp && email.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            if (uiState.isSendingOtp) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onSecondary
+                                )
+                            } else {
+                                Text(
+                                    text = "Send OTP",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        // Resend OTP button with countdown
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "OTP sent to your email",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.primary
+                                ),
+                                fontSize = 12.sp
+                            )
+                            
+                            TextButton(
+                                onClick = {
+                                    if (email.isNotBlank() && isValidEmail(email)) {
+                                        viewModel.sendOtp(email)
+                                    }
+                                },
+                                enabled = uiState.otpResendSeconds == 0 && !uiState.isSendingOtp
+                            ) {
+                                Text(
+                                    text = if (uiState.otpResendSeconds > 0) {
+                                        "Resend OTP (${uiState.otpResendSeconds}s)"
+                                    } else {
+                                        "Resend OTP"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.primary
+                                    ),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column {
@@ -251,14 +343,16 @@ fun SignupScreen(
                     
                     OutlinedTextField(
                         value = otp,
-                        onValueChange = { 
-                            otp = it
+                        onValueChange = { newValue ->
+                            // Only allow numeric input and limit to 6 digits
+                            val filtered = newValue.filter { it.isDigit() }.take(6)
+                            otp = filtered
                             otpError = ""
                         },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
                             Text(
-                                text = "Enter OTP",
+                                text = "Enter 6-digit OTP",
                                 color = Color.White.copy(alpha = 0.6f)
                             )
                         },
@@ -323,6 +417,11 @@ fun SignupScreen(
                             hasError = true
                         }
                         
+                        if (!uiState.isOtpSent) {
+                            emailError = "Please send OTP first"
+                            hasError = true
+                        }
+                        
                         if (otp.isBlank()) {
                             otpError = "OTP is required"
                             hasError = true
@@ -332,7 +431,7 @@ fun SignupScreen(
                         }
                         
                         if (!hasError) {
-                            viewModel.signup(email, password, otp)
+                            viewModel.verifyOtpAndSignup(email, password, otp)
                         }
                     },
                     modifier = Modifier

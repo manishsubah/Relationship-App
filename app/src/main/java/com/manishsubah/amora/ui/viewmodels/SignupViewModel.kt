@@ -3,6 +3,7 @@ package com.manishsubah.amora.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.manishsubah.amora.data.local.SessionManager
+import com.manishsubah.amora.data.remote.OtpService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignupViewModel @Inject constructor(
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val otpService: OtpService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignupUiState())
@@ -120,12 +122,167 @@ class SignupViewModel @Inject constructor(
     fun resetSignupSuccess() {
         _uiState.value = _uiState.value.copy(isSignupSuccessful = false)
     }
+    
+    /**
+     * Sends OTP code to the specified email address.
+     * 
+     * This method validates the email format and calls the OTP service
+     * to send an OTP code. Updates UI state to reflect sending status.
+     * 
+     * @param email User's email address
+     */
+    fun sendOtp(email: String) {
+        viewModelScope.launch {
+            try {
+                android.util.Log.d("SignupViewModel", "sendOtp called for email: $email")
+                
+                // Validate email format
+                if (email.isBlank()) {
+                    android.util.Log.w("SignupViewModel", "Email is blank")
+                    _uiState.value = _uiState.value.copy(
+                        error = "Email is required",
+                        isSendingOtp = false
+                    )
+                    return@launch
+                }
+                
+                if (!isValidEmail(email)) {
+                    android.util.Log.w("SignupViewModel", "Invalid email format: $email")
+                    _uiState.value = _uiState.value.copy(
+                        error = "Please enter a valid email address",
+                        isSendingOtp = false
+                    )
+                    return@launch
+                }
+                
+                android.util.Log.d("SignupViewModel", "Starting OTP send process...")
+                _uiState.value = _uiState.value.copy(
+                    isSendingOtp = true,
+                    error = null
+                )
+                
+                // Call OTP service to send OTP
+                android.util.Log.d("SignupViewModel", "Calling otpService.sendOtp()...")
+                val result = otpService.sendOtp(email)
+                
+                result.fold(
+                    onSuccess = {
+                        android.util.Log.i("SignupViewModel", "OTP sent successfully!")
+                        _uiState.value = _uiState.value.copy(
+                            isSendingOtp = false,
+                            isOtpSent = true,
+                            otpResendSeconds = 60 // Start 60-second cooldown
+                        )
+                        startOtpResendTimer()
+                    },
+                    onFailure = { exception ->
+                        android.util.Log.e("SignupViewModel", "OTP send failed: ${exception.message}", exception)
+                        _uiState.value = _uiState.value.copy(
+                            isSendingOtp = false,
+                            error = exception.message ?: "Failed to send OTP. Please try again."
+                        )
+                    }
+                )
+                
+            } catch (e: Exception) {
+                android.util.Log.e("SignupViewModel", "Unexpected error in sendOtp: ${e.message}", e)
+                _uiState.value = _uiState.value.copy(
+                    isSendingOtp = false,
+                    error = "An unexpected error occurred. Please try again."
+                )
+            }
+        }
+    }
+    
+    /**
+     * Verifies the OTP code and completes signup if valid.
+     * 
+     * @param email User's email address
+     * @param otp OTP code entered by user
+     * @param password User's password
+     */
+    fun verifyOtpAndSignup(email: String, password: String, otp: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = true,
+                    error = null
+                )
+                
+                // Validate inputs
+                val validationResult = validateSignupInputs(email, password, otp)
+                if (!validationResult.isValid) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = validationResult.errorMessage
+                    )
+                    return@launch
+                }
+                
+                // Verify OTP
+                val verifyResult = otpService.verifyOtp(email, otp)
+                
+                verifyResult.fold(
+                    onSuccess = { customToken ->
+                        // OTP verified, complete signup
+                        sessionManager.saveUserSession(
+                            email = email,
+                            userId = "user_${System.currentTimeMillis()}",
+                            accessToken = customToken,
+                            refreshToken = "refresh_token_${System.currentTimeMillis()}"
+                        )
+                        
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isSignupSuccessful = true
+                        )
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Invalid OTP. Please try again."
+                        )
+                    }
+                )
+                
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "An unexpected error occurred. Please try again."
+                )
+            }
+        }
+    }
+    
+    /**
+     * Starts a countdown timer for OTP resend functionality.
+     * Updates resendSeconds every second until it reaches 0.
+     */
+    private fun startOtpResendTimer() {
+        viewModelScope.launch {
+            android.util.Log.d("SignupViewModel", "Starting OTP resend timer (60 seconds)")
+            var seconds = 60
+            while (seconds > 0) {
+                kotlinx.coroutines.delay(1000)
+                seconds--
+                _uiState.value = _uiState.value.copy(otpResendSeconds = seconds)
+                if (seconds % 10 == 0) { // Log every 10 seconds
+                    android.util.Log.d("SignupViewModel", "Resend timer: $seconds seconds remaining")
+                }
+            }
+            android.util.Log.d("SignupViewModel", "Resend timer completed - resend now available")
+            _uiState.value = _uiState.value.copy(otpResendSeconds = 0)
+        }
+    }
 }
 
 data class SignupUiState(
     val isLoading: Boolean = false,
     val isSignupSuccessful: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isSendingOtp: Boolean = false,
+    val isOtpSent: Boolean = false,
+    val otpResendSeconds: Int = 0
 )
 
 private data class ValidationResult(

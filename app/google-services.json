@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "73624815571",
+    "project_id": "relationshipapp-6f21d",
+    "storage_bucket": "relationshipapp-6f21d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73624815571:android:a1b9435c683df9675b5126",
+        "android_client_info": {
+          "package_name": "com.manishsubah.amora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSyC-D_07tybXo5h9RNJ6QCvqkxk9TSr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
