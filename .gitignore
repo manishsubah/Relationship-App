@@ -16,3 +16,9 @@ local.properties
 
 # Documentation files (not to be committed)
 *.md
+
+# Screen recordings and videos
+*.wmv
+*.mp4
+*.avi
+Screen Recording*.wmv

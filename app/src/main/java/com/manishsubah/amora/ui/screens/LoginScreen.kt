@@ -15,11 +15,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.manishsubah.amora.ui.viewmodels.LoginViewModel
+import android.app.Activity
 
 @Composable
 fun LoginScreen(
@@ -28,13 +30,28 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // Get Activity from context for Firebase Phone Auth
+    val context = LocalContext.current
+    val activity = remember { context as? Activity }
 
+    // Login mode: true = Mobile OTP, false = Email/Password
+    var loginMode by remember { mutableStateOf(false) }
+    
+    // Email/Password fields
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    
+    // Mobile OTP fields
+    var mobileNumber by remember { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
+    var otpVisible by remember { mutableStateOf(false) }
 
     var emailError by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf("") }
+    var mobileError by remember { mutableStateOf("") }
+    var otpError by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) {
@@ -45,6 +62,12 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
+            // Set error to appropriate field based on login mode
+            if (loginMode) {
+                mobileError = uiState.error ?: ""
+            } else {
+                emailError = uiState.error ?: ""
+            }
             viewModel.clearError()
         }
     }
@@ -101,7 +124,47 @@ fun LoginScreen(
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Column {
+                // Login Mode Toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    TextButton(
+                        onClick = { loginMode = false },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (!loginMode) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Text(
+                            text = "Email/Password",
+                            fontWeight = if (!loginMode) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                    
+                    TextButton(
+                        onClick = { loginMode = true },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (loginMode) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Text(
+                            text = "Mobile OTP",
+                            fontWeight = if (loginMode) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Email/Password Login Fields
+                if (!loginMode) {
+                    Column {
                     Text(
                         text = "Email",
                         style = MaterialTheme.typography.labelLarge.copy(
@@ -207,29 +270,276 @@ fun LoginScreen(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
+                    }
+                }
+                
+                // Mobile OTP Login Fields
+                if (loginMode) {
+                    Column {
+                        Text(
+                            text = "Mobile Number",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = mobileNumber,
+                            onValueChange = { newValue ->
+                                // Allow + and digits, format: +{country code}{number}
+                                val filtered = if (newValue.startsWith("+")) {
+                                    "+" + newValue.drop(1).filter { it.isDigit() }.take(14)
+                                } else {
+                                    newValue.filter { it.isDigit() || it == '+' }.take(15)
+                                }
+                                mobileNumber = filtered
+                                mobileError = ""
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = {
+                                Text(
+                                    text = "+91 9876543210",
+                                    color = Color.White.copy(alpha = 0.6f)
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.Black,
+                                unfocusedContainerColor = Color.Black,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedPlaceholderColor = Color.White.copy(alpha = 0.6f),
+                                unfocusedPlaceholderColor = Color.White.copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            isError = mobileError.isNotEmpty(),
+                            singleLine = true
+                        )
+                        if (mobileError.isNotEmpty()) {
+                            Text(
+                                text = mobileError,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                        
+                        // Helper text for phone format
+                        Text(
+                            text = "Enter number with country code (e.g., +91 for India, +1 for US)",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            ),
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                        
+                        // Send OTP Button
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        if (!uiState.isOtpSent) {
+                            Button(
+                                onClick = {
+                                    if (mobileNumber.isBlank()) {
+                                        mobileError = "Mobile number is required"
+                                    } else {
+                                        val phoneNumber = if (mobileNumber.startsWith("+")) {
+                                            mobileNumber
+                                        } else {
+                                            "+91$mobileNumber" // Default to India (+91) if no country code
+                                        }
+                                        
+                                        // Validate E.164 format (min length: +country code + number)
+                                        if (phoneNumber.length < 10 || phoneNumber.length > 15) {
+                                            mobileError = "Please enter a valid phone number with country code"
+                                        } else if (!phoneNumber.matches(Regex("^\\+[1-9]\\d{1,14}$"))) {
+                                            mobileError = "Invalid format. Use E.164 format: +{country code}{number}"
+                                        } else {
+                                            viewModel.sendPhoneOtp(phoneNumber, activity)
+                                        }
+                                    }
+                                },
+                                enabled = !uiState.isSendingOtp && mobileNumber.isNotBlank(),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                    contentColor = MaterialTheme.colorScheme.onSecondary
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                if (uiState.isSendingOtp) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onSecondary
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Send OTP",
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "OTP sent to your phone",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.primary
+                                    ),
+                                    fontSize = 12.sp
+                                )
+                                
+                                TextButton(
+                                    onClick = {
+                                        val phoneNumber = if (mobileNumber.startsWith("+")) {
+                                            mobileNumber
+                                        } else {
+                                            "+91$mobileNumber" // Default to India (+91) if no country code
+                                        }
+                                        viewModel.resendPhoneOtp(phoneNumber, activity)
+                                    },
+                                    enabled = uiState.otpResendSeconds == 0 && !uiState.isSendingOtp
+                                ) {
+                                    Text(
+                                        text = if (uiState.otpResendSeconds > 0) {
+                                            "Resend OTP (${uiState.otpResendSeconds}s)"
+                                        } else {
+                                            "Resend OTP"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = MaterialTheme.colorScheme.primary
+                                        ),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // OTP Field
+                    Column {
+                        Text(
+                            text = "OTP",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = otp,
+                            onValueChange = { newValue ->
+                                val filtered = newValue.filter { it.isDigit() }.take(6)
+                                otp = filtered
+                                otpError = ""
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = {
+                                Text(
+                                    text = "Enter 6-digit OTP",
+                                    color = Color.White.copy(alpha = 0.6f)
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.Black,
+                                unfocusedContainerColor = Color.Black,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedPlaceholderColor = Color.White.copy(alpha = 0.6f),
+                                unfocusedPlaceholderColor = Color.White.copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            visualTransformation = if (otpVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            trailingIcon = {
+                                IconButton(onClick = { otpVisible = !otpVisible }) {
+                                    Text(
+                                        text = if (otpVisible) "Hide" else "Show",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            },
+                            isError = otpError.isNotEmpty(),
+                            singleLine = true
+                        )
+                        if (otpError.isNotEmpty()) {
+                            Text(
+                                text = otpError,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
                     onClick = {
-                        var hasError = false
-                        if (email.isBlank()) {
-                            emailError = "Email is required"
-                            hasError = true
-                        } else if (!isValidEmail(email)) {
-                            emailError = "Please enter a valid email"
-                            hasError = true
-                        }
-                        if (password.isBlank()) {
-                            passwordError = "Password is required"
-                            hasError = true
-                        } else if (password.length < 6) {
-                            passwordError = "Password must be at least 6 characters"
-                            hasError = true
-                        }
-                        if (!hasError) {
-                            viewModel.login(email, password)
+                        if (!loginMode) {
+                            // Email/Password Login
+                            var hasError = false
+                            if (email.isBlank()) {
+                                emailError = "Email is required"
+                                hasError = true
+                            } else if (!isValidEmail(email)) {
+                                emailError = "Please enter a valid email"
+                                hasError = true
+                            }
+                            if (password.isBlank()) {
+                                passwordError = "Password is required"
+                                hasError = true
+                            } else if (password.length < 6) {
+                                passwordError = "Password must be at least 6 characters"
+                                hasError = true
+                            }
+                            if (!hasError) {
+                                viewModel.login(email, password)
+                            }
+                        } else {
+                            // Mobile OTP Login
+                            var hasError = false
+                            if (!uiState.isOtpSent) {
+                                mobileError = "Please send OTP first"
+                                hasError = true
+                            }
+                            if (mobileNumber.isBlank()) {
+                                mobileError = "Mobile number is required"
+                                hasError = true
+                            }
+                            if (otp.isBlank()) {
+                                otpError = "OTP is required"
+                                hasError = true
+                            } else if (otp.length != 6) {
+                                otpError = "OTP must be 6 digits"
+                                hasError = true
+                            }
+                            if (!hasError) {
+                                val phoneNumber = if (mobileNumber.startsWith("+")) {
+                                    mobileNumber
+                                } else {
+                                    "+91$mobileNumber" // Default to India (+91) if no country code
+                                }
+                                viewModel.verifyPhoneOtp(phoneNumber, otp)
+                            }
                         }
                     },
                     modifier = Modifier
@@ -249,7 +559,7 @@ fun LoginScreen(
                         )
                     } else {
                         Text(
-                            text = "Login",
+                            text = if (loginMode) "Verify OTP" else "Login",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onPrimary
