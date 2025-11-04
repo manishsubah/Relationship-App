@@ -30,20 +30,15 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    // Get Activity from context for Firebase Phone Auth
+
     val context = LocalContext.current
     val activity = remember { context as? Activity }
-
-    // Login mode: true = Mobile OTP, false = Email/Password
     var loginMode by remember { mutableStateOf(false) }
-    
-    // Email/Password fields
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     
-    // Mobile OTP fields
     var mobileNumber by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var otpVisible by remember { mutableStateOf(false) }
@@ -62,7 +57,6 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
-            // Set error to appropriate field based on login mode
             if (loginMode) {
                 mobileError = uiState.error ?: ""
             } else {
@@ -124,7 +118,6 @@ fun LoginScreen(
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Login Mode Toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -162,7 +155,6 @@ fun LoginScreen(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Email/Password Login Fields
                 if (!loginMode) {
                     Column {
                     Text(
@@ -273,7 +265,6 @@ fun LoginScreen(
                     }
                 }
                 
-                // Mobile OTP Login Fields
                 if (loginMode) {
                     Column {
                         Text(
@@ -288,7 +279,6 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = mobileNumber,
                             onValueChange = { newValue ->
-                                // Allow + and digits, format: +{country code}{number}
                                 val filtered = if (newValue.startsWith("+")) {
                                     "+" + newValue.drop(1).filter { it.isDigit() }.take(14)
                                 } else {
@@ -329,7 +319,6 @@ fun LoginScreen(
                             )
                         }
                         
-                        // Helper text for phone format
                         Text(
                             text = "Enter number with country code (e.g., +91 for India, +1 for US)",
                             style = MaterialTheme.typography.bodySmall.copy(
@@ -339,7 +328,6 @@ fun LoginScreen(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                         
-                        // Send OTP Button
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         if (!uiState.isOtpSent) {
@@ -354,7 +342,6 @@ fun LoginScreen(
                                             "+91$mobileNumber" // Default to India (+91) if no country code
                                         }
                                         
-                                        // Validate E.164 format (min length: +country code + number)
                                         if (phoneNumber.length < 10 || phoneNumber.length > 15) {
                                             mobileError = "Please enter a valid phone number with country code"
                                         } else if (!phoneNumber.matches(Regex("^\\+[1-9]\\d{1,14}$"))) {
@@ -428,7 +415,6 @@ fun LoginScreen(
                         }
                     }
                     
-                    // OTP Field
                     Column {
                         Text(
                             text = "OTP",
@@ -495,7 +481,6 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         if (!loginMode) {
-                            // Email/Password Login
                             var hasError = false
                             if (email.isBlank()) {
                                 emailError = "Email is required"
@@ -515,7 +500,6 @@ fun LoginScreen(
                                 viewModel.login(email, password)
                             }
                         } else {
-                            // Mobile OTP Login
                             var hasError = false
                             if (!uiState.isOtpSent) {
                                 mobileError = "Please send OTP first"

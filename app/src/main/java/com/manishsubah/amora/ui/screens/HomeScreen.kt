@@ -13,13 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.manishsubah.amora.ui.theme.AmoraTheme
 
-/**
- * Dummy Home Screen displayed after successful login.
- * 
- * This screen serves as a placeholder for the main app content
- * after user authentication. In a production app, this would contain
- * the main features like matches, messages, profile, etc.
- */
 @Composable
 fun HomeScreen(
     userIdentifier: String = "",
@@ -38,7 +31,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Welcome to Amora! 💕",
+                text = "Welcome to Amora!",
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
