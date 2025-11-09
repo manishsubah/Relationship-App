@@ -123,20 +123,11 @@ class SignupViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isSignupSuccessful = false)
     }
     
-    /**
-     * Sends OTP code to the specified email address.
-     * 
-     * This method validates the email format and calls the OTP service
-     * to send an OTP code. Updates UI state to reflect sending status.
-     * 
-     * @param email User's email address
-     */
     fun sendOtp(email: String) {
         viewModelScope.launch {
             try {
                 android.util.Log.d("SignupViewModel", "sendOtp called for email: $email")
                 
-                // Validate email format
                 if (email.isBlank()) {
                     android.util.Log.w("SignupViewModel", "Email is blank")
                     _uiState.value = _uiState.value.copy(
@@ -161,7 +152,6 @@ class SignupViewModel @Inject constructor(
                     error = null
                 )
                 
-                // Call OTP service to send OTP
                 android.util.Log.d("SignupViewModel", "Calling otpService.sendOtp()...")
                 val result = otpService.sendOtp(email)
                 
@@ -194,13 +184,6 @@ class SignupViewModel @Inject constructor(
         }
     }
     
-    /**
-     * Verifies the OTP code and completes signup if valid.
-     * 
-     * @param email User's email address
-     * @param otp OTP code entered by user
-     * @param password User's password
-     */
     fun verifyOtpAndSignup(email: String, password: String, otp: String) {
         viewModelScope.launch {
             try {
@@ -209,7 +192,6 @@ class SignupViewModel @Inject constructor(
                     error = null
                 )
                 
-                // Validate inputs
                 val validationResult = validateSignupInputs(email, password, otp)
                 if (!validationResult.isValid) {
                     _uiState.value = _uiState.value.copy(
@@ -218,13 +200,11 @@ class SignupViewModel @Inject constructor(
                     )
                     return@launch
                 }
-                
-                // Verify OTP
+
                 val verifyResult = otpService.verifyOtp(email, otp)
                 
                 verifyResult.fold(
                     onSuccess = { customToken ->
-                        // OTP verified, complete signup
                         sessionManager.saveUserSession(
                             email = email,
                             userId = "user_${System.currentTimeMillis()}",
@@ -254,10 +234,6 @@ class SignupViewModel @Inject constructor(
         }
     }
     
-    /**
-     * Starts a countdown timer for OTP resend functionality.
-     * Updates resendSeconds every second until it reaches 0.
-     */
     private fun startOtpResendTimer() {
         viewModelScope.launch {
             android.util.Log.d("SignupViewModel", "Starting OTP resend timer (60 seconds)")

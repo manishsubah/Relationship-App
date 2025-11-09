@@ -32,13 +32,11 @@ class LoginViewModel @Inject constructor(
     
     private val phoneAuthCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-            // Auto-verification completed (instant verification)
             signInWithPhoneCredential(credential)
         }
 
         override fun onVerificationFailed(e: FirebaseException) {
             android.util.Log.e("LoginViewModel", "Phone verification failed: ${e.message}", e)
-            // Provide user-friendly error message
             val errorMessage = when {
                 e.message?.contains("TOO_SHORT") == true -> {
                     "Phone number is too short. Please include country code (e.g., +91 for India)"
@@ -86,7 +84,6 @@ class LoginViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Simulate API call
                 kotlinx.coroutines.delay(1200)
                 val success = email.contains("@") && password.length >= 6
                 if (success) {
@@ -113,13 +110,7 @@ class LoginViewModel @Inject constructor(
     fun resetLoginSuccess() {
         _uiState.value = _uiState.value.copy(isLoginSuccessful = false)
     }
-    
-    /**
-     * Sends phone OTP via Firebase Phone Authentication.
-     * 
-     * @param phoneNumber Phone number in E.164 format (e.g., +1234567890)
-     * @param activity Current activity for reCAPTCHA verification
-     */
+
     fun sendPhoneOtp(phoneNumber: String, activity: Activity? = null) {
         viewModelScope.launch {
             try {
@@ -129,24 +120,20 @@ class LoginViewModel @Inject constructor(
                     isSendingOtp = true,
                     error = null
                 )
-                
-                // Build phone auth options
+
                 val builder = PhoneAuthOptions.newBuilder(auth)
                     .setPhoneNumber(phoneNumber)
                     .setTimeout(60L, TimeUnit.SECONDS)
                     .setCallbacks(phoneAuthCallbacks)
-                
-                // Add activity for reCAPTCHA if available
+
                 activity?.let {
                     builder.setActivity(it)
                 }
-                
-                // Send OTP
+
                 PhoneAuthProvider.verifyPhoneNumber(builder.build())
                 
             } catch (e: Exception) {
                 android.util.Log.e("LoginViewModel", "Error sending OTP: ${e.message}", e)
-                // Provide user-friendly error message
                 val errorMessage = when {
                     e.message?.contains("TOO_SHORT") == true -> {
                         "Phone number is too short. Please include country code (e.g., +91 for India)"
@@ -168,13 +155,7 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Resends phone OTP using the force resend token.
-     * 
-     * @param phoneNumber Phone number in E.164 format
-     * @param activity Current activity for reCAPTCHA verification
-     */
+
     fun resendPhoneOtp(phoneNumber: String, activity: Activity? = null) {
         val token = forceResendToken ?: run {
             android.util.Log.w("LoginViewModel", "No resend token available, sending new OTP")
@@ -194,8 +175,7 @@ class LoginViewModel @Inject constructor(
                     .setTimeout(60L, TimeUnit.SECONDS)
                     .setCallbacks(phoneAuthCallbacks)
                     .setForceResendingToken(token)
-                
-                // Add activity for reCAPTCHA if available
+
                 activity?.let {
                     builder.setActivity(it)
                 }
@@ -211,13 +191,7 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Verifies the OTP code entered by user.
-     * 
-     * @param phoneNumber Phone number in E.164 format
-     * @param code 6-digit OTP code
-     */
+
     fun verifyPhoneOtp(phoneNumber: String, code: String) {
         viewModelScope.launch {
             try {
@@ -233,11 +207,9 @@ class LoginViewModel @Inject constructor(
                     )
                     return@launch
                 }
-                
-                // Create credential from verification ID and code
+
                 val credential = PhoneAuthProvider.getCredential(vid, code)
-                
-                // Sign in with credential
+
                 signInWithPhoneCredential(credential)
                 
             } catch (e: Exception) {
@@ -249,12 +221,7 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Signs in user with phone credential and saves session.
-     * 
-     * @param credential PhoneAuthCredential from Firebase
-     */
+
     private fun signInWithPhoneCredential(credential: PhoneAuthCredential) {
         viewModelScope.launch {
             try {
@@ -262,8 +229,7 @@ class LoginViewModel @Inject constructor(
                 
                 val user = result.user
                 val phoneNumber = user?.phoneNumber ?: ""
-                
-                // Save session
+
                 sessionManager.saveUserSession(
                     email = phoneNumber, // Using phone number as identifier
                     userId = user?.uid ?: "user_${System.currentTimeMillis()}",
@@ -286,10 +252,7 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Starts countdown timer for OTP resend functionality.
-     */
+
     private fun startOtpResendTimer() {
         viewModelScope.launch {
             var seconds = 60
